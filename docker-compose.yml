@@ -1,0 +1,173 @@
+# TFI
+
+# =========== VOLUMES PERSISTENTES ==============
+volumes:
+  n8n_data:
+  postgres_data:
+  ollama_models:
+  qdrant_data:
+  typebot_data:
+
+# ==================== REDES ====================
+networks:
+  rag-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.5.0.0/16
+
+# ================== SERVICIOS ==================
+services:
+  # ---------- POSTGRESQL ----------
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres-rag-v2
+    networks:
+      - rag-network
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB:-n8n_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-n8n_user}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------- N8N ----------
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n-rag-v2
+    networks:
+      - rag-network
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_USER=${POSTGRES_USER:-n8n_user}
+      - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
+      - DB_POSTGRESDB_DATABASE=${POSTGRES_DB:-n8n_db}
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+      - N8N_USER_MANAGEMENT_JWT_SECRET=${N8N_JWT_SECRET}
+      - N8N_DIAGNOSTICS_ENABLED=false
+      - OLLAMA_HOST=ollama:11434
+      - QDRANT_HOST=qdrant
+      - N8N_BINARY_DATA_MODE=filesystem
+      - N8N_RESTRICT_FILE_ACCESS_TO=/data/shared
+      - N8N_EDITOR_BASE_URL=${N8N_URL}
+      - WEBHOOK_URL=${N8N_URL}
+      - N8N_PUSH_BACKEND_TYPE=websocket
+
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./rag-data:/rag-data:ro
+      - ./shared:/data/shared
+    depends_on:
+      postgres:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+      ollama:
+        condition: service_started
+
+  # ---------- OLLAMA ----------
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama-rag-v2
+    networks:
+      - rag-network
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_models:/root/.ollama
+
+  # ---------- QDRANT ----------
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: qdrant-rag-v2
+    networks:
+      - rag-network
+    restart: unless-stopped
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+
+
+  # ---------- TYPEBOT DATABASE ----------
+  typebot-db:
+    image: postgres:16-alpine
+    container_name: typebot-db
+    networks:
+      - rag-network
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${TYPEBOT_DB_USER}
+      - POSTGRES_PASSWORD=${TYPEBOT_DB_PASSWORD}
+      - POSTGRES_DB=${TYPEBOT_DB_NAME}
+    volumes:
+      - typebot_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${TYPEBOT_DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------- TYPEBOT BUILDER (Donde se diseña el bot) ----------
+  typebot-builder:
+    image: baptistearno/typebot-builder:latest
+    container_name: typebot-builder
+    networks:
+      - rag-network
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://${TYPEBOT_DB_USER}:${TYPEBOT_DB_PASSWORD}@typebot-db:5432/${TYPEBOT_DB_NAME}
+      - NEXTAUTH_URL=${TYPEBOT_BUILDER_URL}
+      - NEXT_PUBLIC_VIEWER_URL=${TYPEBOT_VIEWER_URL}
+      - ENCRYPTION_SECRET=${TYPEBOT_ENCRYPTION_SECRET}
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - SMTP_HOST=mailpit
+      - SMTP_PORT=1025
+      - NEXT_PUBLIC_SMTP_FROM=noreply@localhost
+    depends_on:
+      typebot-db:
+        condition: service_healthy
+
+  # ---------- TYPEBOT VIEWER (El chat que ve el usuario) ----------
+  typebot-viewer:
+    image: baptistearno/typebot-viewer:latest
+    container_name: typebot-viewer
+    networks:
+      - rag-network
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      - DATABASE_URL=postgresql://${TYPEBOT_DB_USER}:${TYPEBOT_DB_PASSWORD}@typebot-db:5432/${TYPEBOT_DB_NAME}
+      - NEXTAUTH_URL=${TYPEBOT_VIEWER_URL}
+      - NEXT_PUBLIC_VIEWER_URL=${TYPEBOT_VIEWER_URL}
+      - ENCRYPTION_SECRET=${TYPEBOT_ENCRYPTION_SECRET}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      typebot-db:
+        condition: service_healthy
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: mailpit
+    networks:
+      - rag-network
+    restart: unless-stopped
+    ports:
+      - "8025:8025"
