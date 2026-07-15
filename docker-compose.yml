@@ -67,7 +67,7 @@ services:
     volumes:
       - n8n_data:/home/node/.n8n
       - ./rag-data:/rag-data:ro
-      - ./shared:/data/shared
+      - ./shared/documents/:/data/shared/documents/
     depends_on:
       postgres:
         condition: service_healthy
