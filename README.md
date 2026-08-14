@@ -64,15 +64,15 @@ El stack está compuesto por los siguientes servicios integrados mediante **Dock
 
 ```mermaid
 graph TD
-    User([Usuario]) -->|Interactúa| Typebot[Typebot Viewer: Port 3001]
-    Typebot -->|Diseño de Flujo| Builder[Typebot Builder: Port 3000]
-    Builder -->|Webhook| n8n[n8n Automation: Port 5678]
+    User(["Usuario"]) -->|Interactúa| Typebot["Typebot Viewer: Port 3001"]
+    Typebot -->|Diseño de Flujo| Builder["Typebot Builder: Port 3000"]
+    Builder -->|Webhook| n8n["n8n Automation: Port 5678"]
     
-    subgraph Cerebro RAG (n8n Workflow)
-        n8n -->|Carga de PDFs| Docs[Directorio Local: ./shared/documents]
-        n8n -->|Genera Embeddings / Chat| Ollama[Ollama LLM: Port 11434]
-        n8n -->|Almacena/Busca Vectores| Qdrant[Qdrant DB: Port 6333]
-        n8n -->|Memoria de Chat| Postgres[Postgres DB]
+    subgraph cerebro ["Cerebro RAG (n8n Workflow)"]
+        n8n -->|Carga de PDFs| Docs["Directorio Local: ./shared/documents"]
+        n8n -->|Genera Embeddings / Chat| Ollama["Ollama LLM: Port 11434"]
+        n8n -->|Almacena/Busca Vectores| Qdrant["Qdrant DB: Port 6333"]
+        n8n -->|Memoria de Chat| Postgres["Postgres DB"]
     end
 ```
 
