@@ -112,6 +112,38 @@ cp .env.example .env
 
 Abre el archivo `.env` con un editor de texto y define contraseñas seguras y claves aleatorias donde se te indique. Si estás corriendo el proyecto localmente, los valores por defecto y puertos sugeridos van a funcionar sin problemas.
 
+```bash
+# === PostgreSQL ===
+POSTGRES_USER=postgres # Usuario
+POSTGRES_PASSWORD=password # Password
+POSTGRES_DB=nombreDB # Nombre de la Base de Datos.
+
+# === N8N ===
+N8N_ENCRYPTION_KEY=clave64caracteres # Se puede generar una con: openssl rand -base64 32
+N8N_JWT_SECRET=password # Password
+N8N_URL=http://localhost:5678/
+
+# === TYPEBOT ===
+
+# Credenciales de la DB de Typebot
+TYPEBOT_DB_USER=user # Usuario
+TYPEBOT_DB_PASSWORD=password # Password
+TYPEBOT_DB_NAME=typebot_db # Nombre de la Base de Datos.
+
+# URLs de acceso (Si estás en local, usa localhost. Si estás en servidor, usa tu IP o dominio)
+# El Builder corre en el 3000 y el Viewer en el 3001 según el YAML
+TYPEBOT_BUILDER_URL=http://localhost:3000
+TYPEBOT_VIEWER_URL=http://localhost:3001
+
+
+TYPEBOT_ENCRYPTION_SECRET=clave32caracteres # Se puede generar una con: openssl rand -base64 32
+
+# === MAILPIT ===
+
+# Define qué correos electrónicos se consideran administradores automáticos
+ADMIN_EMAIL=cualquiera@ejemplo.com # Mail de uso interno. Ej.typebot@mail.com
+```
+
 ### 3. Iniciar el Stack con Docker
 Inicia todos los contenedores en segundo plano:
 
