@@ -220,6 +220,6 @@ El flujo de n8n requiere dos modelos en Ollama. Debes descargarlos en el contene
 ## 🎮 Probar el Chatbot
 
 Una vez configurado y publicado:
-1. Abre **Typebot Viewer** o dale a **Preview** en el Builder.
+1. Abre **Typebot Viewer** o dale a **Preview** en el Builder o ingresa a `http://localhost:3001`.
 2. Escribe una pregunta al chat basada en los PDFs que colocaste en la carpeta `shared/documents`.
 3. El agente de IA responderá basándose estrictamente en la información de tus documentos, recordando los mensajes anteriores gracias a la persistencia en PostgreSQL.
