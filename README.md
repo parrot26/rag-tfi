@@ -41,9 +41,13 @@ Puedes buscar cualquier modelo compatible en la [Biblioteca de Modelos de Ollama
 2. Abre el workflow importado.
 3. Busca los nodos de Ollama:
    * **Ollama Chat Model** (conectado al agente de IA).
-   * **Embeddings Ollama / Embeddings Ollama1** (utilizado para procesar los PDFs).
-4. Cambia el campo **Model** escribiendo exactamente el nombre del nuevo modelo que descargaste en el paso anterior (por ejemplo, `gemma2:9b`).
+   * **Ollama Model** (el modelo de lenguaje que usa la herramienta "Answer questions with a vector store" para resumir los documentos recuperados).
+   * **Embeddings Ollama / Embeddings Ollama1** (utilizados para procesar los PDFs).
+4. Cambia el campo **Model** de los nodos de chat/resumen escribiendo exactamente el nombre del nuevo modelo que descargaste en el paso anterior (por ejemplo, `gemma2:9b`).
 5. Guarda los cambios en n8n (`Save`). El sistema comenzará a usar el nuevo modelo automáticamente.
+
+> [!NOTE]
+> No reemplaces el modelo de embeddings (`nomic-embed-text-v2-moe`): al cambiar de modelo cambian las dimensiones de los vectores y los documentos ya indexados en Qdrant quedarían incompatibles.
 
 ---
 
@@ -104,7 +108,7 @@ mkdir -p shared/documents rag-data
 * Coloca en la carpeta `shared/documents` todos los archivos **PDF** que quieras que tu bot aprenda.
 
 ### 2. Configurar las variables de entorno
-Copia el archivo de plantilla `.env.example` y renombralo a `.env`:
+Copia el archivo de plantilla `.env.example` y renómbralo a `.env`:
 
 ```bash
 cp .env.example .env
@@ -181,17 +185,17 @@ El flujo de n8n requiere dos modelos en Ollama. Debes descargarlos en el contene
 3. Importa el flujo de trabajo:
    * Ve a **Workflows** -> **Add Workflow** (o crea uno nuevo vacío).
    * En la esquina superior derecha, haz clic en los tres puntos (`...`) y selecciona **Import from File**.
-   * Elige el archivo [`rag-stack-tfi-v5.json`](rag-tfi/archivo-n8n/rag-stack-tfi-v5.json) ubicado en la carpeta `archivo-n8n/`.
+   * Elige el archivo [`rag-stack-tfi-v5.json`](archivo-n8n/rag-stack-tfi-v5.json) ubicado en la carpeta `archivo-n8n/`.
 4. **Configurar Credenciales** en n8n:
    * Al importar el flujo, n8n te pedirá configurar o vincular las credenciales de:
      * **Qdrant**: Host: `qdrant`, Puerto: `6333` (sin API key en local).
      * **Ollama**: Host/URL: `http://ollama:11434`.
-     * **Postgres (Chat Memory)**: Host: `postgres`, Usuario: El configurado en tu `.env` (`POSTGRES_USER`), Contraseña: El configurado en tu `.env` (`POSTGRES_PASSWORD`), Base de datos: `n8n_db`.
+     * **Postgres (Chat Memory)**: Host: `postgres`, Usuario: el de tu `.env` (`POSTGRES_USER`), Contraseña: el de tu `.env` (`POSTGRES_PASSWORD`), Base de datos: `POSTGRES_DB` de tu `.env` (por defecto `n8n_db`).
 
 ### 📂 Indexar Documentos
 1. Coloca tus archivos `.pdf` en la carpeta `./shared/documents/` de tu máquina.
 2. Abre el workflow importado en n8n.
-3. Haz clic en la primera rama del flujo llamada **Manual Trigger** y presiona **Execute workflow** (o haz clic en el nodo "Read/Write Files from Disk").
+3. Haz clic en el primer nodo del flujo, llamado **When clicking 'Execute workflow'** (el trigger manual), y presiona **Execute workflow** (o haz clic directamente en el nodo **Read/Write Files from Disk**).
 4. Esto leerá tus PDFs, generará los vectores de texto y los guardará en la colección `archivos_tfi` en Qdrant. ¡Tu base de datos de conocimiento ya tiene la información cargada!
 
 ---
@@ -202,11 +206,12 @@ El flujo de n8n requiere dos modelos en Ollama. Debes descargarlos en el contene
 2. Regístrate/inicia sesión (puedes ver la bandeja de entrada de correos de prueba en **Mailpit** en [http://localhost:8025](http://localhost:8025) si el flujo requiere confirmación de email).
 3. Importa la plantilla del bot:
    * Crea un nuevo chatbot seleccionando **Import a file**.
-   * Selecciona el archivo [`typebot-export-my-typebot-g6eejrx.json`](rag-tfi/archivo-typebot/typebot-export-my-typebot-g6eejrx.json) que se encuentra en la carpeta `archivo-typebot/`.
+   * Selecciona el archivo [`typebot-export-my-typebot-g6eejrx.json`](archivo-typebot/typebot-export-my-typebot-g6eejrx.json) que se encuentra en la carpeta `archivo-typebot/`.
 4. Conectar Typebot con n8n:
    * Abre el nodo del bot importado. Verás un bloque de tipo **Webhook** que realiza una petición `POST` HTTP.
    * Ve a n8n, abre el nodo **Webhook** (el trigger del chat) y copia la **Production URL** (o Test URL si estás haciendo pruebas).
-   * En Typebot, pega esta URL en el campo URL del bloque Webhook. 
+   * En Typebot, pega esta URL en el campo URL del bloque Webhook.
+   * La plantilla importada trae una URL de ejemplo apuntando al servidor original de desarrollo (`http://n8n.137.131.129.119.nip.io:5678/webhook/typebot`); reemplázala por la de tu propia instancia.
    * *Nota en Docker*: Como los contenedores se comunican internamente, puedes usar la dirección de red interna de Docker: `http://n8n-rag-v2:5678/webhook/typebot` en lugar de `localhost`.
 5. Publica el bot haciendo clic en **Publish** en la esquina superior derecha.
 
