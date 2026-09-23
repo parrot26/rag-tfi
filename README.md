@@ -189,7 +189,7 @@ El flujo de n8n requiere dos modelos en Ollama. Debes descargarlos en el contene
 4. **Configurar Credenciales** en n8n:
    * Al importar el flujo, n8n te pedirá configurar o vincular las credenciales de:
      * **Qdrant**: Host: `qdrant`, Puerto: `6333` (sin API key en local).
-     * **Ollama**: Host/URL: `http://ollama:11434`.
+     * **Ollama**: Host/URL: `http://ollama-rag-v2:11434`.
      * **Postgres (Chat Memory)**: Host: `postgres`, Usuario: el de tu `.env` (`POSTGRES_USER`), Contraseña: el de tu `.env` (`POSTGRES_PASSWORD`), Base de datos: `POSTGRES_DB` de tu `.env` (por defecto `n8n_db`).
 
 ### 📂 Indexar Documentos
