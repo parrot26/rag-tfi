@@ -105,7 +105,7 @@ Copia los archivos a tu servidor o máquina local. El sistema requiere que exist
 ```bash
 mkdir -p shared/documents rag-data
 ```
-* Coloca en la carpeta `shared/documents` todos los archivos **PDF** que quieras que tu bot aprenda.
+* Coloca en la carpeta `shared/documents` el archivo de la Guía de Controles de Ciberseguridad para PyMes en formato **PDF** sumado a cualquier otro archivo importante (también en formato **PDF**) que quieras que tu bot aprenda.
 
 ### 2. Configurar las variables de entorno
 Copia el archivo de plantilla `.env.example` y renómbralo a `.env`:
